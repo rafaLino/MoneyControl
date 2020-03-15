@@ -2,9 +2,9 @@ import * as React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
-import { HomePage } from './src/pages/homePage';
-import { ExpensePage } from './src/pages/expensePage';
-import { SummaryPage } from './src/pages/summaryPage';
+import { HomePage } from './pages/homePage';
+import { ExpensePage } from './pages/expensePage';
+import { SummaryPage } from './pages/summaryPage';
 
 
 
