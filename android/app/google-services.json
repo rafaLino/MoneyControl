@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "488179679956",
+    "firebase_url": "https://money-control-be0c9.firebaseio.com",
+    "project_id": "money-control-be0c9",
+    "storage_bucket": "money-control-be0c9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488179679956:android:8598b366296c79a7623141",
+        "android_client_info": {
+          "package_name": "com.moneycontrol"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "488179679956-qd6kjhjvovaq2t4s6vhpou4hd775m4sj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMHp0JQJ5QKFJMjGAQgWfshS3s42kTNkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "488179679956-qd6kjhjvovaq2t4s6vhpou4hd775m4sj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

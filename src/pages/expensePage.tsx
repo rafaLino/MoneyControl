@@ -1,12 +1,66 @@
-import React, { Component } from "react";
-import {View, Text } from 'react-native';
+import React, { Component, useEffect } from "react";
+import { Text, FlatList, View, ActivityIndicator, StyleSheet } from 'react-native';
+import firestore from '@react-native-firebase/firestore';
+import { Expense } from "../model/expense";
 
-export class ExpensePage extends Component {
+type State = { expenses: Array<Expense>, loading: boolean };
+export class ExpensePage extends Component<{}, State> {
+    constructor(props: {}) {
+        super(props);
+        this.state = { expenses: [], loading: true };
+    }
+
+    componentDidMount() {
+        const unsubscribe = firestore()
+            .collection('expenses')
+            .onSnapshot((querySnapShot) => {
+                const list: Expense[] = querySnapShot.docs.map((document) => {
+                    return {
+                        ...document.data() as Expense,
+                        id: document.id
+                    };
+                });
+                this.setState({
+                    expenses: list
+                });
+
+                if (this.state.loading) {
+                    this.setState({ loading: false })
+                }
+            }, (error) => console.log(error)
+            );
+
+        return () => unsubscribe();
+    }
+
     render() {
+        const { loading, expenses } = this.state;
+
+        if (loading) {
+            return (
+                <View style={[styles.container, styles.horizontal]}>
+                    <ActivityIndicator size="large" color="#ff0000" />
+                </View>
+            );
+        }
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>Expense Page!</Text>
-            </View>
+            <FlatList
+                data={expenses}
+        renderItem={({ item }) => <Text>{item.id} - {item.name} : {item.value}</Text>}
+            />
+
         );
     }
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center'
+    },
+    horizontal: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        padding: 10
+    }
+})
