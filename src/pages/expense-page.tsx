@@ -1,7 +1,8 @@
-import React, { Component, useEffect } from "react";
+import React, { Component } from "react";
 import { Text, FlatList, View, ActivityIndicator, StyleSheet } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
-import { Expense } from "../model/expense";
+import { Expense } from "../core/models/expense";
+import { expenseService } from "../services/expense-service";
+
 
 type State = { expenses: Array<Expense>, loading: boolean };
 export class ExpensePage extends Component<{}, State> {
@@ -11,8 +12,8 @@ export class ExpensePage extends Component<{}, State> {
     }
 
     componentDidMount() {
-        const unsubscribe = firestore()
-            .collection('expenses')
+        const unsubscribe = expenseService
+            .collection()
             .onSnapshot((querySnapShot) => {
                 const list: Expense[] = querySnapShot.docs.map((document) => {
                     return {
@@ -46,7 +47,7 @@ export class ExpensePage extends Component<{}, State> {
         return (
             <FlatList
                 data={expenses}
-        renderItem={({ item }) => <Text>{item.id} - {item.name} : {item.value}</Text>}
+                renderItem={({ item }) => <Text>{item.id} - {item.name} : {item.value}</Text>}
             />
 
         );
