@@ -1,9 +1,9 @@
 import React, { Component } from "react";
-import { Text, FlatList, View, ActivityIndicator, StyleSheet, SafeAreaView } from 'react-native';
+import { FlatList, View, ActivityIndicator, StyleSheet, SafeAreaView } from 'react-native';
 import { Expense } from "../core/models/expense";
 import { expenseService } from "../services/expense-service";
 import { globalStyle } from "../core/styles/global-styles";
-import { Card, ListItem } from 'react-native-elements';
+import { Card } from 'react-native-elements';
 import ExpenseItemView from "../core/components/expense-item-view";
 
 type State = { expenses: Array<Expense>, loading: boolean };
@@ -69,16 +69,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         padding: globalStyle.padding.SM
+
     },
     center: {
         alignItems: 'center',
-        padding: 50
+        padding: 50,
+        bottom: 0
     },
     card: {
-        minHeight: 300,
-        minWidth: 300,
-        padding: globalStyle.padding.XL,
-        borderRadius: 5
+        minHeight: 500,
+        minWidth: 350,
+        padding: globalStyle.padding.SM,
+        borderRadius: 8
 
     }
 })
