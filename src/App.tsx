@@ -16,7 +16,11 @@ const myTheme = {
   color: {
     ...DefaultTheme.colors,
     backgroundColor: '#f6f8fa'
+  },
+  font: {
+    
   }
+  
 }
 export default function App() {
   const pages: any = {

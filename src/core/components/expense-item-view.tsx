@@ -1,18 +1,20 @@
 import React, { Fragment } from 'react';
-import { Dimensions, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Card } from 'react-native-elements';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { globalStyle } from '../styles/global-styles';
+import { Expense } from '../models/expense';
 
 type ExpenseItemViewProps = {
-    name: string,
-    value: number,
-    onRemovePress?: Function
+    item: Expense,
+    onRemovePress: Function,
+    onEditPress: Function
 }
 
 type State = {
     btnPressed: boolean,
-    inEdition: boolean
+    inEdition: boolean,
+    moneyValue: string
 }
 
 export default class ExpenseItemView extends React.Component<ExpenseItemViewProps, State> {
@@ -21,25 +23,48 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
         super(props);
         this.state = {
             btnPressed: false,
-            inEdition: false
+            inEdition: false,
+            moneyValue: this.toCurrency(props.item.value)
         }
+
     }
+
+    toCurrency(number: number): string {
+        return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    submitEdit = (stringValue: string): void => {
+        const newValue = parseFloat(stringValue.replace("R$", "").replace(",", "."));
+        this.setState({ moneyValue: this.toCurrency(newValue), inEdition: false });
+        this.props.item.value = newValue;
+        this.props.onEditPress(this.props.item);
+    }
+
     render() {
-        const { name, value, onRemovePress } = this.props;
-        const { btnPressed, inEdition } = this.state;
+        const { item, onRemovePress } = this.props;
+        const { btnPressed, inEdition, moneyValue } = this.state;
         return (
             <Card containerStyle={styles.card} >
                 <SafeAreaView style={styles.container}>
                     <View style={styles.fieldBox}>
-                        <Text style={[styles.field]}>{name.toUpperCase()}</Text>
+                        <Text style={[styles.field]}>{item.name.toUpperCase()}</Text>
                     </View>
                     {inEdition ?
                         <Fragment>
                             <View style={styles.fieldBox}>
-                                <Text style={[styles.field]}>{value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Text>
+                                <TextInput
+                                    style={[styles.field]}
+                                    maxLength={14}
+                                    keyboardType="number-pad"
+                                    value={moneyValue}
+                                    onChangeText={(text) => this.setState({ moneyValue: text })}
+                                    onSubmitEditing={() => this.submitEdit(moneyValue)}
+                                    autoFocus={true}
+                                />
                             </View>
                             <TouchableOpacity
-                                onPress={() => onRemovePress}
+                                style={styles.iconButton}
+                                onPress={() => this.submitEdit(moneyValue)}
                                 onPressIn={() => this.setState({ btnPressed: true })}
                                 onPressOut={() => this.setState({ btnPressed: false })}
                             >
@@ -54,10 +79,16 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
                         :
                         <Fragment>
                             <View style={styles.fieldBox}>
-                                <Text style={[styles.field]}>{value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Text>
+                                <Text
+                                    style={[styles.field]}
+                                    onLongPress={() => this.setState({ inEdition: true })}
+                                >
+                                    {moneyValue}
+                                </Text>
                             </View>
                             <TouchableOpacity
-                                onPress={() => onRemovePress}
+                                style={styles.iconButton}
+                                onPress={(e) => { e.preventDefault(); onRemovePress() }}
                                 onPressIn={() => this.setState({ btnPressed: true })}
                                 onPressOut={() => this.setState({ btnPressed: false })}
                             >
@@ -80,8 +111,8 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         justifyContent: "space-between",
-        paddingLeft: 12,
-        paddingRight: 50
+        paddingHorizontal: 12,
+        paddingVertical: 20
     },
     fieldBox: {
         alignSelf: "center"
@@ -90,9 +121,19 @@ const styles = StyleSheet.create({
         fontSize: globalStyle.fontSize.MD,
         fontWeight: "600",
     },
+    fieldInput: {
+        borderWidth: 1,
+        borderColor: "blue"
+    },
     card: {
-        minWidth: Dimensions.get('screen').width,
+        minWidth: Dimensions.get('screen').width - 100,
+        minHeight: 90,
         borderRadius: 12,
-
+    },
+    iconButton: {
+        width: 50,
+        height: 50,
+        alignItems: "center",
+        justifyContent: "center"
     }
 });

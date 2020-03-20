@@ -9,6 +9,8 @@ class ExpenseService extends ServiceBase<Expense> {
         super("expenses");
     }
 
+    
+
 }
 
 export const expenseService = new ExpenseService();
