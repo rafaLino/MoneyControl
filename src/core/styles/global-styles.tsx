@@ -1,8 +1,14 @@
+
 export const globalStyle = {
     color: {
         primary: 'tomato',
+        red:'#f44336',
+        grey:"grey",
+        secondary: "#272D2D",
+        tertiary: "orange",
         loader: '#F27185',
         inactive: 'gray',
+
     },
     padding: {
         /** 8px */
@@ -28,4 +34,5 @@ export const globalStyle = {
         /** 24px */
         XL: 24
     }
+
 };

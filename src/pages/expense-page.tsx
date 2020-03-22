@@ -1,40 +1,102 @@
 import React, { Component } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, View, Modal, Alert, Text, TouchableHighlight } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, SafeAreaView, StyleSheet, TextInput, View } from 'react-native';
+import ActionModal from "../core/components/action-modal";
 import ExpenseItemView from "../core/components/expense-item-view";
+import IconButton from "../core/components/icon-button";
 import { Expense } from "../core/models/expense";
+import { modelBase } from "../core/models/model-base";
 import { globalStyle } from "../core/styles/global-styles";
+import { toCurrencyNumber } from "../core/utils/to-currency";
 import { expenseService } from "../services/expense-service";
+import ToasterService from "../services/toaster-service";
 
 
 type State = {
     expenses: Array<Expense>,
     loading: boolean,
-    modalVisible: boolean
+    showModal: boolean,
+    data?: any,
+    newExpense?: Expense
 };
 export class ExpensePage extends Component<{}, State> {
+
+    private _newExpense: Expense;
+    private _isMounted: boolean;
+    private _unsubscribe?: Function;
+    private _nameTextInput: TextInput | null = null;
+    private _valueTextInput: TextInput | null = null;
+
     constructor(props: {}) {
         super(props);
         this.state = {
             expenses: [],
             loading: true,
-            modalVisible: false
+            showModal: false
         };
+
+        this._newExpense = { id: "", name: "", value: 0 };
+        this._isMounted = false;
     }
 
-    setModalVisible(visible: boolean) {
-        this.setState({ modalVisible: visible });
+
+
+    removeExpenseItem = (id: string) => {
+        this.openModal({ id });
     }
 
-    removeExpenseItem = () => {
-        this.setModalVisible(true);
+    confirmRemove = async (data: modelBase) => {
+        try {
+            await expenseService.delete(data.id);
+        } catch (error) {
+            ToasterService.show("Tente novamente mais tarde.");
+        }
+        finally {
+            this.closeModal();
+        }
     }
 
     editExpenseItem = async (item: Expense) => {
-        await expenseService.update(item.id, item);
+        try {
+
+            await expenseService.update(item.id, item);
+
+        } catch (error) {
+            ToasterService.show("Tente novamente mais tarde.");
+        }
+        finally {
+            this.closeModal();
+        }
     }
 
-    componentDidMount() {
-        const unsubscribe = expenseService
+    addExpense = async (item: Expense) => {
+        try {
+            if ((item.name == "" || item.name == null || item.name == undefined) ||
+                (item.value == 0 || item.value == null || item.value == undefined))
+                throw new Error("Preencha as informações da Despesa");
+            await expenseService.create(item);
+            this.clearNewExpense();
+        } catch (error) {
+            ToasterService.show((error as Error).message)
+        }
+    }
+
+    clearNewExpense = () => {
+        delete this._newExpense.name;
+        delete this._newExpense.value;
+        this._nameTextInput && this._nameTextInput.clear();
+        this._valueTextInput && this._valueTextInput.clear();
+    }
+
+    closeModal = () => {
+        this.setState({ showModal: false });
+    }
+
+    openModal = (data: any) => {
+        this.setState({ showModal: true, data });
+    }
+
+    getExpenses(): void {
+        this._unsubscribe = expenseService
             .collection()
             .onSnapshot((querySnapShot) => {
                 const list: Expense[] = querySnapShot.docs.map((document) => {
@@ -50,14 +112,31 @@ export class ExpensePage extends Component<{}, State> {
                 if (this.state.loading) {
                     this.setState({ loading: false })
                 }
-            }, (error) => console.log(error)
+            }, (error) => {
+                ToasterService.show((error as Error).message);
+                this._unsubscribe && this._unsubscribe();
+            }
             );
-
-        return () => unsubscribe();
     }
 
+    componentDidMount() {
+        this._isMounted = true;
+        this._isMounted && this.getExpenses();
+    }
+
+    componentWillUnmount() {
+        this._isMounted = false;
+        this._unsubscribe && this._unsubscribe();
+    }
+
+
     render() {
-        const { loading, expenses } = this.state;
+        const {
+            loading,
+            expenses,
+            showModal,
+            data
+        } = this.state;
 
         if (loading) {
             return (
@@ -67,39 +146,54 @@ export class ExpensePage extends Component<{}, State> {
             );
         }
         return (
-            <SafeAreaView style={[styles.container, styles.horizontal, styles.center]}>
-                <FlatList
-                    data={expenses}
-                    renderItem={({ item }) => <ExpenseItemView
-                        item={item}
-                        onRemovePress={this.removeExpenseItem}
-                        onEditPress={this.editExpenseItem}
-                    >
-
-                    </ExpenseItemView>}
-                />
-                <Modal
-                    animationType="fade"
-                    transparent={false}
-                    visible={this.state.modalVisible}
-                    presentationStyle="formSheet"
-                    onRequestClose={() => {
-                        Alert.alert('Modal has been closed.');
-                    }}>
-                    <View style={{ marginTop: 22 }}>
+            <>
+                <View style={styles.container}>
+                    <View style={styles.inputBox}>
                         <View>
-                            <Text>Hello World!</Text>
-
-                            <TouchableHighlight
-                                onPress={() => {
-                                    this.setModalVisible(!this.state.modalVisible);
-                                }}>
-                                <Text>Hide Modal</Text>
-                            </TouchableHighlight>
+                            <TextInput
+                                style={styles.addInput}
+                                placeholder="Adicione uma nova despesa"
+                                placeholderTextColor={globalStyle.color.grey}
+                                onChangeText={(text) => this._newExpense.name = text}
+                                ref={(input) => this._nameTextInput = input}
+                                onSubmitEditing={() => this._valueTextInput?.focus()}
+                            />
+                            <TextInput
+                                style={styles.addInput}
+                                placeholder="Adicione o valor"
+                                placeholderTextColor={globalStyle.color.grey}
+                                keyboardType="number-pad"
+                                onChangeText={(text) => this._newExpense.value = toCurrencyNumber(text)}
+                                ref={(input) => this._valueTextInput = input}
+                            />
                         </View>
+                        <IconButton
+                            iconName="plus-circle"
+                            onPress={() => this.addExpense(this._newExpense)}
+                            iconStyle={{ textAlign: "right", paddingLeft: 20 }}
+                        />
                     </View>
-                </Modal>
-            </SafeAreaView>
+
+                    <SafeAreaView style={styles.horizontal}>
+                        <FlatList
+                            data={expenses}
+                            renderItem={({ item }) => (
+                                <ExpenseItemView
+                                    key={item.id}
+                                    item={item}
+                                    onRemovePress={this.removeExpenseItem}
+                                    onEditPress={this.editExpenseItem}
+                                />)}
+                        />
+                        <ActionModal
+                            modalOptions={{ isOpen: showModal, optionalData: data }}
+                            title="Você deseja remover este item?"
+                            onAcceptAction={this.confirmRemove}
+                            onDeniedAction={this.closeModal}
+                        />
+                    </SafeAreaView>
+                </View>
+            </>
         );
     }
 }
@@ -107,15 +201,28 @@ export class ExpensePage extends Component<{}, State> {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center'
+        flexDirection: "column",
+        alignItems: "center",
+        paddingHorizontal: globalStyle.padding.MD,
+        paddingTop: '20%'
     },
     horizontal: {
+        flex: 1,
         flexDirection: 'row',
         justifyContent: 'space-around',
         padding: globalStyle.padding.SM
-
     },
-    center: {
-        alignItems: 'center'
+    addInput: {
+        borderWidth: 1,
+        borderColor: globalStyle.color.primary,
+        borderRadius: 10,
+        minWidth: Dimensions.get('screen').width - 150,
+        paddingHorizontal: globalStyle.padding.MD,
+        paddingTop: globalStyle.padding.MD,
+        marginBottom: 12
+    },
+    inputBox: {
+        flexDirection: "row",
+        alignItems: "center"
     }
 })

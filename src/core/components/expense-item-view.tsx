@@ -1,9 +1,10 @@
 import React, { Fragment } from 'react';
-import { Dimensions, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Card } from 'react-native-elements';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { globalStyle } from '../styles/global-styles';
 import { Expense } from '../models/expense';
+import { globalStyle } from '../styles/global-styles';
+import IconButton from './icon-button';
+import { toCurrency } from '../utils/to-currency';
 
 type ExpenseItemViewProps = {
     item: Expense,
@@ -12,7 +13,6 @@ type ExpenseItemViewProps = {
 }
 
 type State = {
-    btnPressed: boolean,
     inEdition: boolean,
     moneyValue: string
 }
@@ -22,27 +22,27 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
     constructor(props: ExpenseItemViewProps) {
         super(props);
         this.state = {
-            btnPressed: false,
             inEdition: false,
-            moneyValue: this.toCurrency(props.item.value)
+            moneyValue: toCurrency(props.item.value)
         }
 
     }
 
-    toCurrency(number: number): string {
-        return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
 
     submitEdit = (stringValue: string): void => {
         const newValue = parseFloat(stringValue.replace("R$", "").replace(",", "."));
-        this.setState({ moneyValue: this.toCurrency(newValue), inEdition: false });
+        this.setState({ moneyValue: toCurrency(newValue), inEdition: false });
         this.props.item.value = newValue;
         this.props.onEditPress(this.props.item);
     }
 
+    cancelEdition = () => {
+        this.setState({ inEdition: false });
+    }
+
     render() {
         const { item, onRemovePress } = this.props;
-        const { btnPressed, inEdition, moneyValue } = this.state;
+        const { inEdition, moneyValue } = this.state;
         return (
             <Card containerStyle={styles.card} >
                 <SafeAreaView style={styles.container}>
@@ -51,7 +51,7 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
                     </View>
                     {inEdition ?
                         <Fragment>
-                            <View style={styles.fieldBox}>
+                            <View style={[styles.fieldBox, styles.inputBox]}>
                                 <TextInput
                                     style={[styles.field]}
                                     maxLength={14}
@@ -62,19 +62,11 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
                                     autoFocus={true}
                                 />
                             </View>
-                            <TouchableOpacity
-                                style={styles.iconButton}
-                                onPress={() => this.submitEdit(moneyValue)}
-                                onPressIn={() => this.setState({ btnPressed: true })}
-                                onPressOut={() => this.setState({ btnPressed: false })}
-                            >
-                                <MaterialCommunityIcons
-                                    name={btnPressed ? "check-circle-outline" : "check-circle"}
-                                    size={30}
-                                    color={globalStyle.color.primary}
-                                />
-                            </TouchableOpacity>
-
+                            <IconButton
+                                iconName="close-circle"
+                                buttonStyle={styles.iconButton}
+                                onPress={this.cancelEdition}
+                            />
                         </Fragment>
                         :
                         <Fragment>
@@ -86,18 +78,11 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
                                     {moneyValue}
                                 </Text>
                             </View>
-                            <TouchableOpacity
-                                style={styles.iconButton}
-                                onPress={(e) => { e.preventDefault(); onRemovePress() }}
-                                onPressIn={() => this.setState({ btnPressed: true })}
-                                onPressOut={() => this.setState({ btnPressed: false })}
-                            >
-                                <MaterialCommunityIcons
-                                    name={btnPressed ? "minus-circle-outline" : "minus-circle"}
-                                    size={30}
-                                    color={globalStyle.color.primary}
-                                />
-                            </TouchableOpacity>
+                            <IconButton
+                                iconName="minus-circle"
+                                buttonStyle={styles.iconButton}
+                                onPress={(e) => { e.preventDefault(); onRemovePress(item.id) }}
+                            />
                         </Fragment>
                     }
                 </SafeAreaView>
@@ -111,19 +96,16 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         justifyContent: "space-between",
-        paddingHorizontal: 12,
+        paddingHorizontal: 0,
         paddingVertical: 20
     },
     fieldBox: {
-        alignSelf: "center"
+        alignSelf: "center",
+        paddingHorizontal: globalStyle.padding.MD
     },
     field: {
         fontSize: globalStyle.fontSize.MD,
         fontWeight: "600",
-    },
-    fieldInput: {
-        borderWidth: 1,
-        borderColor: "blue"
     },
     card: {
         minWidth: Dimensions.get('screen').width - 100,
@@ -135,5 +117,11 @@ const styles = StyleSheet.create({
         height: 50,
         alignItems: "center",
         justifyContent: "center"
+    },
+    inputBox: {
+        borderBottomWidth: 1,
+        borderColor: globalStyle.color.red,
+        borderRadius: 5,
+        paddingHorizontal: globalStyle.padding.MD
     }
 });
