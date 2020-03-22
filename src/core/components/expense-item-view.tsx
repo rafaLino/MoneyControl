@@ -4,7 +4,7 @@ import { Card } from 'react-native-elements';
 import { Expense } from '../models/expense';
 import { globalStyle } from '../styles/global-styles';
 import IconButton from './icon-button';
-import { toCurrency } from '../utils/to-currency';
+import { toCurrency, toCurrencyNumber } from '../utils/to-currency';
 
 type ExpenseItemViewProps = {
     item: Expense,
@@ -30,7 +30,7 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
 
 
     submitEdit = (stringValue: string): void => {
-        const newValue = parseFloat(stringValue.replace("R$", "").replace(",", "."));
+        const newValue = toCurrencyNumber(stringValue);
         this.setState({ moneyValue: toCurrency(newValue), inEdition: false });
         this.props.item.value = newValue;
         this.props.onEditPress(this.props.item);
@@ -45,9 +45,9 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
         const { inEdition, moneyValue } = this.state;
         return (
             <Card containerStyle={styles.card} >
-                <SafeAreaView style={styles.container}>
+                <SafeAreaView onTouchMove={() => onRemovePress(item.id)} style={styles.container}>
                     <View style={styles.fieldBox}>
-                        <Text style={[styles.field]}>{item.name.toUpperCase()}</Text>
+                        <Text numberOfLines={1} style={styles.field}>{item.name.toUpperCase()}</Text>
                     </View>
                     {inEdition ?
                         <Fragment>
@@ -72,7 +72,7 @@ export default class ExpenseItemView extends React.Component<ExpenseItemViewProp
                         <Fragment>
                             <View style={styles.fieldBox}>
                                 <Text
-                                    style={[styles.field]}
+                                    style={styles.field}
                                     onLongPress={() => this.setState({ inEdition: true })}
                                 >
                                     {moneyValue}
@@ -95,9 +95,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         flexDirection: 'row',
-        justifyContent: "space-between",
+        justifyContent: "space-around",
         paddingHorizontal: 0,
-        paddingVertical: 20
+        paddingVertical: 25
     },
     fieldBox: {
         alignSelf: "center",
@@ -106,6 +106,7 @@ const styles = StyleSheet.create({
     field: {
         fontSize: globalStyle.fontSize.MD,
         fontWeight: "600",
+        width: 100,
     },
     card: {
         minWidth: Dimensions.get('screen').width - 100,

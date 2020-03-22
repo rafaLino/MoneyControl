@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { ActivityIndicator, Dimensions, FlatList, SafeAreaView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, SafeAreaView, StyleSheet, TextInput, View, Keyboard } from 'react-native';
 import ActionModal from "../core/components/action-modal";
 import ExpenseItemView from "../core/components/expense-item-view";
 import IconButton from "../core/components/icon-button";
@@ -75,6 +75,7 @@ export class ExpensePage extends Component<{}, State> {
                 throw new Error("Preencha as informações da Despesa");
             await expenseService.create(item);
             this.clearNewExpense();
+            Keyboard.dismiss();
         } catch (error) {
             ToasterService.show((error as Error).message)
         }
