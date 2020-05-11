@@ -1,12 +1,9 @@
 import React, { Component } from "react";
-import { ActivityIndicator, Dimensions, FlatList, SafeAreaView, StyleSheet, TextInput, View, Keyboard } from 'react-native';
-import ActionModal from "../core/components/action-modal";
+import { ActivityIndicator, Dimensions, Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import ExpenseItemView from "../core/components/expense-item-view";
-import IconButton from "../core/components/icon-button";
 import { Expense } from "../core/models/expense";
 import { modelBase } from "../core/models/model-base";
 import { globalStyle } from "../core/styles/global-styles";
-import { toCurrencyNumber } from "../core/utils/to-currency";
 import { expenseService } from "../services/expense-service";
 import ToasterService from "../services/toaster-service";
 
@@ -135,8 +132,6 @@ export class ExpensePage extends Component<{}, State> {
         const {
             loading,
             expenses,
-            showModal,
-            data
         } = this.state;
 
         if (loading) {
@@ -149,52 +144,12 @@ export class ExpensePage extends Component<{}, State> {
         return (
             <>
                 <View style={styles.container}>
-                    <View style={styles.inputBox}>
-                        <View>
-                            <TextInput
-                                style={styles.addInput}
-                                placeholder="Adicione uma nova despesa"
-                                placeholderTextColor={globalStyle.color.grey}
-                                onChangeText={(text) => this._newExpense.name = text}
-                                ref={(input) => this._nameTextInput = input}
-                                onSubmitEditing={() => this._valueTextInput?.focus()}
-                            />
-                            <TextInput
-                                style={styles.addInput}
-                                placeholder="Adicione o valor"
-                                placeholderTextColor={globalStyle.color.grey}
-                                keyboardType="number-pad"
-                                onChangeText={(text) => this._newExpense.value = toCurrencyNumber(text)}
-                                ref={(input) => this._valueTextInput = input}
-                            />
-                        </View>
-                        <IconButton
-                            iconName="plus-circle"
-                            onPress={() => this.addExpense(this._newExpense)}
-                            iconStyle={{ textAlign: "right", paddingLeft: 20 }}
-                        />
-                    </View>
-
-                    <SafeAreaView style={styles.horizontal}>
-                        <FlatList
-                            data={expenses}
-                            renderItem={({ item }) => (
-                                <ExpenseItemView
-                                    key={item.id}
-                                    item={item}
-                                    onRemovePress={this.removeExpenseItem}
-                                    onEditPress={this.editExpenseItem}
-                                />)}
-                        />
-                        <ActionModal
-                            modalOptions={{ isOpen: showModal, optionalData: data }}
-                            title="Você deseja remover este item?"
-                            onAcceptAction={this.confirmRemove}
-                            onDeniedAction={this.closeModal}
-                        />
-                    </SafeAreaView>
+                    <ExpenseItemView
+                        expenses={expenses}
+                    />
                 </View>
             </>
+
         );
     }
 }
